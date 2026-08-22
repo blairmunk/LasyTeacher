@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from core_logic.value_objects.task_import import (
     TASK_IMPORT_ACTION_SKIP,
+    normalize_task_import_uuid,
     task_import_action,
 )
 from infrastructure.repositories.django_uuid_lookup import (
@@ -172,7 +173,9 @@ class TaskImportRuntime:
         if field_name not in data or not data[field_name]:
             data[field_name] = str(uuid4())
             self.log_info(f'Генерируем UUID: {data[field_name][-8:]}')
-        return data[field_name]
+        normalized = normalize_task_import_uuid(data[field_name])
+        data[field_name] = normalized
+        return normalized
 
     def get_by_uuid(self, model_class, uuid_str: str):
         cache_key = f'{model_class.__name__}:{uuid_str}'

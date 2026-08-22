@@ -5,6 +5,7 @@ from typing import Any
 from core_logic.value_objects.task_import import (
     TASK_IMPORT_ACTION_UPDATE,
     TaskImportConflictError,
+    normalize_task_import_uuid,
 )
 from curriculum.models import SubTopic, Topic
 
@@ -29,7 +30,8 @@ class TaskTopicImporter:
                 )
 
     def _import_topic(self, topic_data):
-        topic_uuid = str(topic_data['id'])
+        topic_uuid = normalize_task_import_uuid(topic_data['id'])
+        topic_data['id'] = topic_uuid
         topic = self.find(topic_data)
         action = self.runtime.object_action(
             topic,
@@ -87,7 +89,8 @@ class TaskTopicImporter:
 
     def _import_subtopics(self, topic, subtopics_data):
         for subtopic_data in subtopics_data:
-            subtopic_uuid = str(subtopic_data['id'])
+            subtopic_uuid = normalize_task_import_uuid(subtopic_data['id'])
+            subtopic_data['id'] = subtopic_uuid
             subtopic = self.runtime.get_by_uuid(
                 SubTopic,
                 subtopic_uuid,
@@ -155,4 +158,10 @@ class TaskTopicImporter:
     def reference_id(reference):
         if not isinstance(reference, dict):
             return ''
-        return str(reference.get('id') or reference.get('uuid') or '')
+        value = reference.get('id') or reference.get('uuid')
+        if not value:
+            return ''
+        try:
+            return normalize_task_import_uuid(value)
+        except ValueError:
+            return ''

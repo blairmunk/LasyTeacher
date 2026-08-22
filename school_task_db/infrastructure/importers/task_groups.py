@@ -4,6 +4,7 @@ from core_logic.value_objects.task_import import (
     TASK_IMPORT_ACTION_SKIP,
     TASK_IMPORT_ACTION_UPDATE,
     TaskImportConflictError,
+    normalize_task_import_uuid,
     parse_task_group_import_reference,
 )
 from task_groups.models import AnalogGroup, TaskGroup
@@ -29,7 +30,8 @@ class TaskGroupImporter:
                 )
 
     def _import_group(self, group_data):
-        group_uuid = group_data['id']
+        group_uuid = normalize_task_import_uuid(group_data['id'])
+        group_data['id'] = group_uuid
         group = self.find_by_uuid(group_uuid)
         action = self.runtime.object_action(
             group,

@@ -24,6 +24,36 @@ from tasks.models import Source, Task, TaskImage
 
 
 class TaskImporterTests(TestCase):
+    def test_normalizes_catalog_and_reference_uuids_before_linking(self):
+        task_id = '550e8400-e29b-41d4-a716-4466554400ab'
+        group_id = '770e8400-e29b-41d4-a716-4466554400ab'
+        topic_id = '660e8400-e29b-41d4-a716-4466554400ab'
+        source_id = '880e8400-e29b-41d4-a716-4466554400ab'
+        payload = self._task_payload(
+            task_id=task_id.upper(),
+            group_id=group_id.upper(),
+        )
+        payload['topics'][0]['id'] = topic_id.upper()
+        payload['sources'] = [{
+            'id': source_id.upper(),
+            'name': 'Источник',
+        }]
+        payload['tasks'][0]['topic'] = {'id': topic_id}
+        payload['tasks'][0]['groups'] = [{'id': group_id}]
+        payload['tasks'][0]['source'] = {'id': source_id}
+
+        summary = self._import(payload)
+
+        task = Task.objects.select_related('topic', 'source').get(pk=task_id)
+        relation = TaskGroup.objects.get(task=task)
+        self.assertEqual(str(task.topic_id), topic_id)
+        self.assertEqual(str(task.source_id), source_id)
+        self.assertEqual(str(relation.group_id), group_id)
+        self.assertEqual(summary.context_counts['tasks'], 1)
+        self.assertEqual(summary.context_counts['groups'], 1)
+        self.assertEqual(summary.context_counts['topics'], 1)
+        self.assertEqual(summary.context_counts['sources'], 1)
+
     def test_preserves_latex_fields_through_import_export_round_trip(self):
         task_id = '550e8400-e29b-41d4-a716-446655440001'
         payload = self._task_payload(
@@ -234,7 +264,7 @@ class TaskImporterTests(TestCase):
         image_id = '990e8400-e29b-41d4-a716-446655440001'
         payload['task_images'] = [{
             'id': image_id,
-            'task_id': task_id,
+            'task_id': task_id.upper(),
             'filename': 'diagram.bin',
             'base64_data': base64.b64encode(b'image-bytes').decode('ascii'),
             'caption': 'Схема опыта',

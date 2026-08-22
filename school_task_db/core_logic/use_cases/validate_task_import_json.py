@@ -1,10 +1,10 @@
 """Validate task import JSON structure."""
 
 from dataclasses import dataclass
-from uuid import UUID
 
 from core_logic.entities.core import ImportJsonValidationData
 from core_logic.value_objects.task_import import (
+    normalize_task_import_uuid,
     parse_task_group_import_reference,
 )
 from core_logic.value_objects.task_transfer_format import (
@@ -136,16 +136,20 @@ class ValidateTaskImportJsonUseCase:
         task_uuid = task.get('id')
         if not task_uuid:
             task_errors.append(f'Задание #{task_number}: отсутствует id (UUID)')
-        elif task_uuid in uuids_seen:
-            task_errors.append(f'Задание #{task_number}: дублирующийся id {task_uuid}')
         else:
             try:
-                UUID(task_uuid)
-                uuids_seen.add(task_uuid)
+                normalized_uuid = normalize_task_import_uuid(task_uuid)
             except ValueError:
                 task_errors.append(
                     f'Задание #{task_number}: некорректный UUID "{task_uuid}"',
                 )
+            else:
+                if normalized_uuid in uuids_seen:
+                    task_errors.append(
+                        f'Задание #{task_number}: '
+                        f'дублирующийся id {task_uuid}',
+                    )
+                uuids_seen.add(normalized_uuid)
 
         if not task.get('text'):
             task_errors.append(f'Задание #{task_number}: отсутствует text')
@@ -224,8 +228,8 @@ class ValidateTaskImportJsonUseCase:
                 errors.append(f'Группа #{group_number}: отсутствует id (UUID)')
             else:
                 try:
-                    group_uuid = str(UUID(str(group['id'])))
-                except (TypeError, ValueError):
+                    group_uuid = normalize_task_import_uuid(group['id'])
+                except ValueError:
                     errors.append(
                         f'Группа #{group_number}: некорректный '
                         f'UUID "{group["id"]}"',
@@ -263,8 +267,8 @@ class ValidateTaskImportJsonUseCase:
                 )
                 continue
             try:
-                normalized_uuid = str(UUID(str(source_uuid)))
-            except (TypeError, ValueError):
+                normalized_uuid = normalize_task_import_uuid(source_uuid)
+            except ValueError:
                 errors.append(
                     f'Источник #{index}: некорректный UUID '
                     f'"{source_uuid}"',
@@ -331,8 +335,8 @@ class ValidateTaskImportJsonUseCase:
             errors.append(f'{label}: отсутствует id (UUID)')
             return ''
         try:
-            normalized = str(UUID(str(value)))
-        except (TypeError, ValueError):
+            normalized = normalize_task_import_uuid(value)
+        except ValueError:
             errors.append(f'{label}: некорректный UUID "{value}"')
             return ''
         if normalized in seen:
@@ -360,8 +364,8 @@ class ValidateTaskImportJsonUseCase:
                 )
                 continue
             try:
-                normalized_uuid = str(UUID(str(source_uuid)))
-            except (TypeError, ValueError):
+                normalized_uuid = normalize_task_import_uuid(source_uuid)
+            except ValueError:
                 errors.append(
                     f'Задание #{index}: у source некорректный UUID '
                     f'"{source_uuid}"',
@@ -440,8 +444,8 @@ class ValidateTaskImportJsonUseCase:
             errors.append(f'{label}: отсутствует id (UUID)')
             return ''
         try:
-            return str(UUID(str(value)))
-        except (TypeError, ValueError):
+            return normalize_task_import_uuid(value)
+        except ValueError:
             errors.append(f'{label}: некорректный UUID "{value}"')
             return ''
 

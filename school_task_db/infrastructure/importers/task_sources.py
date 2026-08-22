@@ -5,6 +5,7 @@ from typing import Any
 from core_logic.value_objects.task_import import (
     TASK_IMPORT_ACTION_UPDATE,
     TaskImportConflictError,
+    normalize_task_import_uuid,
 )
 from tasks.models import Source
 
@@ -115,7 +116,9 @@ class TaskSourceImporter:
     @staticmethod
     def _reference_id(source_data):
         source_id = source_data.get('id') or source_data.get('uuid')
-        return str(source_id) if source_id else ''
+        if not source_id:
+            return ''
+        return normalize_task_import_uuid(source_id)
 
     def _update(self, source, source_data):
         update_fields = []

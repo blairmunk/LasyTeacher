@@ -125,6 +125,22 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
             for error in data.errors
         ))
 
+    def test_rejects_task_uuid_duplicates_that_differ_only_by_case(self):
+        task_id = '550e8400-e29b-41d4-a716-4466554400ab'
+
+        data = self.use_case.execute(ValidateTaskImportJsonRequest(data={
+            'tasks': [
+                {'id': task_id, 'text': 'Первое'},
+                {'id': task_id.upper(), 'text': 'Второе'},
+            ],
+        }))
+
+        self.assertFalse(data.is_valid)
+        self.assertTrue(any(
+            'Задание #2: дублирующийся id' in error
+            for error in data.errors
+        ))
+
     def test_requires_uuid_object_for_task_source_reference(self):
         task = {
             'id': '550e8400-e29b-41d4-a716-446655440001',

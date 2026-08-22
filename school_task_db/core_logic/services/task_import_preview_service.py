@@ -1,13 +1,12 @@
 """Pure task-bank dry-run analysis."""
 
-from uuid import UUID
-
 from core_logic.entities.task_import import (
     TaskImportClassificationKey,
     TaskImportPreviewFacts,
     TaskImportPreviewLookup,
 )
 from core_logic.value_objects.task_import import (
+    normalize_task_import_uuid,
     parse_task_group_import_reference,
 )
 
@@ -198,8 +197,8 @@ class TaskImportPreviewService:
     @staticmethod
     def _normalize_uuid(value):
         try:
-            return str(UUID(str(value)))
-        except (TypeError, ValueError, AttributeError):
+            return normalize_task_import_uuid(value)
+        except ValueError:
             return ''
 
     @staticmethod

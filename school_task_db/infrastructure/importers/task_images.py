@@ -2,13 +2,13 @@
 
 import base64
 from typing import Any, Dict, Optional
-from uuid import UUID
 
 from django.core.files.base import ContentFile
 
 from core_logic.value_objects.task_import import (
     TASK_IMPORT_ACTION_UPDATE,
     TaskImportConflictError,
+    normalize_task_import_uuid,
 )
 from tasks.models import Task, TaskImage
 
@@ -32,7 +32,18 @@ class TaskImageImporter:
                 )
 
     def _import_image(self, image_data: Dict[str, Any]):
-        task_uuid = image_data.get('task_uuid') or image_data.get('task_id')
+        raw_task_uuid = (
+            image_data.get('task_uuid') or image_data.get('task_id')
+        )
+        try:
+            task_uuid = normalize_task_import_uuid(raw_task_uuid)
+        except ValueError:
+            suffix = str(raw_task_uuid or 'Unknown')[-8:]
+            self.runtime.log_warning(
+                f'Некорректная ссылка на задание '
+                f'для изображения: {suffix}',
+            )
+            return
         task = self.registry.task(task_uuid)
         if task is None:
             suffix = task_uuid[-8:] if task_uuid else 'Unknown'
@@ -72,14 +83,6 @@ class TaskImageImporter:
         image_uuid: str,
         image_data: Dict[str, Any],
     ) -> Optional[TaskImage]:
-        try:
-            UUID(image_uuid)
-        except ValueError as error:
-            self.runtime.log_error(
-                f'Некорректный UUID изображения: {image_uuid} - {error}',
-            )
-            return None
-
         image_content = self._decode_content(image_data)
         if image_content is None:
             return None

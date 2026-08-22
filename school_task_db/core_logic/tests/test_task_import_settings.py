@@ -8,10 +8,26 @@ from core_logic.value_objects.task_import import (
     TASK_IMPORT_MODE_STRICT,
     TASK_IMPORT_MODE_UPDATE,
     TaskImportConflictError,
+    normalize_task_import_uuid,
     parse_task_group_import_reference,
     task_import_action,
     validate_task_import_mode,
 )
+
+
+class TaskImportUuidTests(TestCase):
+    UUID = '550e8400-e29b-41d4-a716-446655440001'
+
+    def test_normalizes_uuid_to_canonical_lowercase(self):
+        self.assertEqual(
+            normalize_task_import_uuid(self.UUID.upper()),
+            self.UUID,
+        )
+
+    def test_rejects_missing_and_invalid_uuid_values(self):
+        for value in (None, '', 'not-a-uuid', object()):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                normalize_task_import_uuid(value)
 
 
 class TaskImportModeTests(TestCase):

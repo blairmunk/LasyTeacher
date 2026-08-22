@@ -40,6 +40,14 @@ class TaskGroupImportReference:
     bank_role: str = TASK_BANK_ROLE_CONTROL
 
 
+def normalize_task_import_uuid(value: Any) -> str:
+    """Return the canonical string representation of a portable UUID."""
+    try:
+        return str(UUID(str(value)))
+    except (TypeError, ValueError, AttributeError) as error:
+        raise ValueError(f'некорректный UUID "{value}"') from error
+
+
 def parse_task_group_import_reference(
     value: Any,
 ) -> TaskGroupImportReference:
@@ -58,8 +66,8 @@ def parse_task_group_import_reference(
     if not group_id:
         raise ValueError('у связи с группой отсутствует id')
     try:
-        normalized_group_id = str(UUID(str(group_id)))
-    except (TypeError, ValueError) as error:
+        normalized_group_id = normalize_task_import_uuid(group_id)
+    except ValueError as error:
         raise ValueError(
             f'у связи с группой некорректный UUID '
             f'"{group_id}"',

@@ -1,8 +1,9 @@
 """Validation of portable task-image records before persistence."""
 
-import base64
-
 from core_logic.entities.task_import import TaskImportImageValidationResult
+from core_logic.services.task_image_transfer_codec import (
+    TaskImageTransferCodec,
+)
 from core_logic.value_objects.task_image_position import (
     TASK_IMAGE_POSITION_LABELS,
 )
@@ -10,6 +11,9 @@ from core_logic.value_objects.task_import import normalize_task_import_uuid
 
 
 class TaskImportImageValidationService:
+    def __init__(self, transfer_codec=None):
+        self.transfer_codec = transfer_codec or TaskImageTransferCodec()
+
     def validate(
         self,
         images,
@@ -74,7 +78,7 @@ class TaskImportImageValidationService:
                     f'{label}: нет base64_data; '
                     'файл можно не создать',
                 )
-            elif not self._valid_base64(encoded):
+            elif not self.transfer_codec.is_valid(encoded):
                 errors.append(f'{label}: base64_data повреждено')
 
         return TaskImportImageValidationResult(
@@ -95,14 +99,3 @@ class TaskImportImageValidationService:
                 f'{label}: некорректный {field_name} UUID "{value}"',
             )
             return ''
-
-    @staticmethod
-    def _valid_base64(value):
-        if not isinstance(value, str):
-            return False
-        encoded = value.split(',', 1)[1] if ',' in value else value
-        try:
-            base64.b64decode(encoded, validate=True)
-        except (ValueError, TypeError):
-            return False
-        return True

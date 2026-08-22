@@ -1,10 +1,12 @@
 """Django task image import component."""
 
-import base64
 from typing import Any, Dict, Optional
 
 from django.core.files.base import ContentFile
 
+from core_logic.services.task_image_transfer_codec import (
+    TaskImageTransferCodec,
+)
 from core_logic.value_objects.task_import import (
     TASK_IMPORT_ACTION_UPDATE,
     TaskImportConflictError,
@@ -14,9 +16,10 @@ from tasks.models import Task, TaskImage
 
 
 class TaskImageImporter:
-    def __init__(self, runtime, registry):
+    def __init__(self, runtime, registry, transfer_codec=None):
         self.runtime = runtime
         self.registry = registry
+        self.transfer_codec = transfer_codec or TaskImageTransferCodec()
 
     def import_images(self, images_data):
         self.runtime.write('🖼️ Импорт изображений заданий...')
@@ -157,7 +160,7 @@ class TaskImageImporter:
         filename = image_data.get('filename', default_filename)
         try:
             return ContentFile(
-                base64.b64decode(encoded, validate=True),
+                self.transfer_codec.decode(encoded),
                 name=filename,
             )
         except Exception as error:

@@ -1,7 +1,5 @@
 """Django task export source adapter."""
 
-import base64
-
 from core_logic.entities.task import (
     TaskExportFilters,
     TaskExportClassificationRef,
@@ -13,6 +11,9 @@ from core_logic.entities.task import (
     TaskExportTopicRef,
 )
 from core_logic.interfaces.task_export_repo import ITaskExportRepository
+from core_logic.services.task_image_transfer_codec import (
+    TaskImageTransferCodec,
+)
 from infrastructure.services.task_image_presentation import (
     TaskImagePresentationService,
 )
@@ -20,6 +21,9 @@ from tasks.models import Task
 
 
 class DjangoTaskExportRepository(ITaskExportRepository):
+    def __init__(self, transfer_codec=None):
+        self.transfer_codec = transfer_codec or TaskImageTransferCodec()
+
     def get_task_export_sources(self, filters: TaskExportFilters):
         return tuple(
             self._task_export_source(task)
@@ -135,15 +139,14 @@ class DjangoTaskExportRepository(ITaskExportRepository):
             codifier_name=item.codifier.short_name,
         )
 
-    @staticmethod
-    def _task_export_images(task):
+    def _task_export_images(self, task):
         result = []
         for image in task.images.all():
             if not TaskImagePresentationService.has_file(image.image):
                 continue
             try:
                 with image.image.open('rb') as image_file:
-                    encoded = base64.b64encode(image_file.read()).decode('ascii')
+                    encoded = self.transfer_codec.encode(image_file.read())
             except Exception:
                 continue
             result.append(TaskExportImageSource(

@@ -4,10 +4,18 @@ from tempfile import TemporaryDirectory
 from django.test import TestCase
 
 from codifier.models import CodifierSpec, ContentEntry, Requirement
+from core_logic.entities.task import TaskExportFilters
 from core_logic.entities.task_import import TaskImportRequest
 from core_logic.use_cases.apply_task_import import ApplyTaskImportUseCase
+from core_logic.use_cases.export_tasks import (
+    ExportTasksRequest,
+    ExportTasksUseCase,
+)
 from core_logic.value_objects.task_import import TaskImportConflictError
 from infrastructure.importers.tasks import DjangoTaskImportWriteSession
+from infrastructure.repositories.django_task_export_repo import (
+    DjangoTaskExportRepository,
+)
 from infrastructure.services.django_transaction_manager import (
     DjangoTransactionManager,
 )
@@ -16,6 +24,46 @@ from tasks.models import Source, Task, TaskImage
 
 
 class TaskImporterTests(TestCase):
+    def test_preserves_latex_fields_through_import_export_round_trip(self):
+        task_id = '550e8400-e29b-41d4-a716-446655440001'
+        payload = self._task_payload(
+            task_id=task_id,
+            group_id='770e8400-e29b-41d4-a716-446655440001',
+        )
+        latex_fields = {
+            'text': r'Вычислите $(3{,}5-1{,}2) \cdot 4$.',
+            'answer': r'$9{,}2$',
+            'short_solution': r'$2{,}3 \cdot 4=9{,}2$',
+            'full_solution': (
+                r'$$\begin{aligned}'
+                r'3{,}5-1{,}2&=2{,}3\\'
+                r'2{,}3\cdot4&=9{,}2'
+                r'\end{aligned}$$'
+            ),
+            'hint': r'Сначала найдите $a-b$.',
+            'instruction': r'Запишите ответ в \(\mathrm{SI}\).',
+        }
+        payload['tasks'][0].update(latex_fields)
+
+        self._import(payload)
+        exported_payload = ExportTasksUseCase(
+            task_export_repo=DjangoTaskExportRepository(),
+        ).execute(ExportTasksRequest(
+            filters=TaskExportFilters(),
+            export_date='2026-08-22',
+        )).payload
+        exported_task = exported_payload['tasks'][0]
+
+        for field_name, source in latex_fields.items():
+            with self.subTest(field_name=field_name):
+                self.assertEqual(exported_task[field_name], source)
+
+        self._import(exported_payload)
+        task = Task.objects.get(pk=task_id)
+        for field_name, source in latex_fields.items():
+            with self.subTest(round_trip_field=field_name):
+                self.assertEqual(getattr(task, field_name), source)
+
     def test_imports_portable_explicit_classifications(self):
         codifier = CodifierSpec.objects.create(
             name='ОГЭ по физике 2026',

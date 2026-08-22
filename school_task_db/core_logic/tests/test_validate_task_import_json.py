@@ -79,7 +79,11 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
                         'subject': 'Физика',
                         'grade_level': 9,
                     }],
-                    'task_images': [{'id': 'image'}],
+                    'task_images': [{
+                        'id': '990e8400-e29b-41d4-a716-446655440001',
+                        'task_id': '550e8400-e29b-41d4-a716-446655440001',
+                        'base64_data': 'aW1hZ2U=',
+                    }],
                     'sources': [{
                         'id': '880e8400-e29b-41d4-a716-446655440001',
                         'name': 'Сборник',
@@ -155,6 +159,22 @@ class ValidateTaskImportJsonUseCaseTests(TestCase):
         self.assertFalse(data.is_valid)
         self.assertTrue(any(
             'source должен быть объектом с id' in error
+            for error in data.errors
+        ))
+
+    def test_rejects_image_for_task_missing_from_same_file(self):
+        data = self.use_case.execute(ValidateTaskImportJsonRequest(data={
+            'tasks': [],
+            'task_images': [{
+                'id': '990e8400-e29b-41d4-a716-446655440001',
+                'task_id': '550e8400-e29b-41d4-a716-446655440001',
+                'base64_data': 'aW1hZ2U=',
+            }],
+        }))
+
+        self.assertFalse(data.is_valid)
+        self.assertTrue(any(
+            'не найден среди tasks этого файла' in error
             for error in data.errors
         ))
 

@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 
 from core_logic.entities.core import ImportJsonValidationData
+from core_logic.services.task_import_image_validation_service import (
+    TaskImportImageValidationService,
+)
 from core_logic.value_objects.task_import import (
     normalize_task_import_uuid,
     parse_task_group_import_reference,
@@ -19,6 +22,11 @@ class ValidateTaskImportJsonRequest:
 
 
 class ValidateTaskImportJsonUseCase:
+    def __init__(self, image_validation_service=None):
+        self.image_validation_service = (
+            image_validation_service or TaskImportImageValidationService()
+        )
+
     def execute(
         self,
         request: ValidateTaskImportJsonRequest,
@@ -83,6 +91,13 @@ class ValidateTaskImportJsonUseCase:
             else:
                 tasks_ok += 1
 
+        image_validation = self.image_validation_service.validate(
+            images_data,
+            declared_task_ids=uuids_seen,
+        )
+        errors.extend(image_validation.errors)
+        warnings.extend(image_validation.warnings)
+
         group_uuids = self._validate_groups(groups_data, errors)
         source_uuids = self._validate_sources(sources_data, errors)
         topic_uuids, subtopic_topics = self._validate_topics(
@@ -115,7 +130,7 @@ class ValidateTaskImportJsonUseCase:
             'tasks_errors': tasks_errors,
             'groups_total': len(groups_data),
             'topics_total': len(topics_data),
-            'images_total': len(images_data),
+            'images_total': image_validation.total,
             'sources_total': len(sources_data),
         }
 

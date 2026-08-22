@@ -186,6 +186,17 @@ class TaskImportRunSummary:
         }
 
 
+@dataclass(frozen=True)
+class TaskImportImageValidationResult:
+    total: int = 0
+    errors: tuple[str, ...] = field(default_factory=tuple)
+    warnings: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'errors', tuple(self.errors))
+        object.__setattr__(self, 'warnings', tuple(self.warnings))
+
+
 @dataclass(frozen=True, order=True)
 class TaskImportClassificationKey:
     kind: str

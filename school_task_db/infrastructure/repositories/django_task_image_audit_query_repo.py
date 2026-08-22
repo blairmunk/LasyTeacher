@@ -14,7 +14,11 @@ class DjangoTaskImageAuditQueryRepository(ITaskImageAuditQueryRepository):
                 pk=str(image.pk),
                 task_text=image.task.text,
                 topic_name=(image.task.topic.name if image.task.topic else ''),
-                filename=image.image.name if image.image else '',
+                filename=(
+                    image.asset.file.name
+                    if image.asset_id and image.asset.file
+                    else ''
+                ),
                 caption=image.caption or '',
                 position=image.position or '',
             )

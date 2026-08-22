@@ -29,7 +29,8 @@ class FakeImageField:
 class TaskImagePresentationServiceTests(SimpleTestCase):
     def test_builds_existing_image_display_data(self):
         task_image = SimpleNamespace(
-            image=FakeImageField(),
+            asset_id='asset-1',
+            asset=SimpleNamespace(file=FakeImageField()),
             position='right_40',
             get_position_display=lambda: 'Справа, 40%',
         )
@@ -37,12 +38,15 @@ class TaskImagePresentationServiceTests(SimpleTestCase):
         display = TaskImagePresentationService.build(task_image)
 
         self.assertTrue(display.has_file)
+        self.assertTrue(display.has_reference)
         self.assertEqual(display.safe_url, '/media/task.png')
+        self.assertEqual(display.file_name, 'task.png')
         self.assertEqual(display.position_status, '✅ Справа, 40%')
 
     def test_handles_missing_image_file(self):
         task_image = SimpleNamespace(
-            image=FakeImageField(exists=False),
+            asset_id='asset-1',
+            asset=SimpleNamespace(file=FakeImageField(exists=False)),
             position='',
             get_position_display=lambda: '',
         )
@@ -50,8 +54,22 @@ class TaskImagePresentationServiceTests(SimpleTestCase):
         display = TaskImagePresentationService.build(task_image)
 
         self.assertFalse(display.has_file)
+        self.assertTrue(display.has_reference)
         self.assertEqual(display.file_size_human, 'Файл отсутствует')
         self.assertEqual(display.position_status, '⚠️ Позиция не задана')
+
+    def test_handles_legacy_row_without_asset_reference(self):
+        task_image = SimpleNamespace(
+            asset_id=None,
+            position='',
+            get_position_display=lambda: '',
+        )
+
+        display = TaskImagePresentationService.build(task_image)
+
+        self.assertFalse(display.has_reference)
+        self.assertFalse(display.has_file)
+        self.assertEqual(display.file_name, '')
 
     def test_resolves_position_css_class(self):
         service = TaskImagePresentationService

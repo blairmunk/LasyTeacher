@@ -237,8 +237,3 @@ class TaskImage(BaseModel):
     def __str__(self):
         position_display = self.get_position_display() if self.position else 'Позиция не задана'
         return f"Изображение для {self.task.topic.name} ({position_display})"
-
-    @property
-    def image(self):
-        """Compatibility read accessor for presentation and form templates."""
-        return self.asset.file if self.asset_id else None

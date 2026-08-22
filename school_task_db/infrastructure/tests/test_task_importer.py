@@ -276,7 +276,7 @@ class TaskImporterTests(TestCase):
             image = TaskImage.objects.get(pk=image_id)
             self.assertEqual(image.position, 'bottom_70')
             self.assertEqual(image.caption, 'Схема опыта')
-            with image.image.open('rb') as imported_file:
+            with image.asset.file.open('rb') as imported_file:
                 self.assertEqual(imported_file.read(), b'image-bytes')
 
     def test_invalid_image_update_keeps_existing_file_and_metadata(self):
@@ -302,7 +302,7 @@ class TaskImporterTests(TestCase):
 
             image = TaskImage.objects.get(pk=image_id)
             self.assertEqual(image.caption, 'Исходная подпись')
-            with image.image.open('rb') as imported_file:
+            with image.asset.file.open('rb') as imported_file:
                 self.assertEqual(imported_file.read(), b'original')
 
     def test_catalog_source_is_resolved_and_updated_for_task(self):

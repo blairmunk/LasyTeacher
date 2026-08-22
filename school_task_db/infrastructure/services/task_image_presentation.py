@@ -8,8 +8,10 @@ from django.template.defaultfilters import filesizeformat
 
 @dataclass(frozen=True)
 class TaskImageDisplayData:
+    has_reference: bool
     has_file: bool
     safe_url: Optional[str]
+    file_name: str
     file_size_human: str
     position_status: str
 
@@ -25,11 +27,13 @@ class TaskImagePresentationService:
 
     @classmethod
     def build(cls, task_image) -> TaskImageDisplayData:
-        image = task_image.image
+        image = task_image.asset.file if task_image.asset_id else None
         has_file = cls.has_file(image)
         return TaskImageDisplayData(
+            has_reference=bool(image and image.name),
             has_file=has_file,
             safe_url=cls.safe_url(image),
+            file_name=image.name if image else '',
             file_size_human=cls.file_size_human(
                 image,
                 has_file=has_file,

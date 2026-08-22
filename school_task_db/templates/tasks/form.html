@@ -252,8 +252,10 @@
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">
                                         Изображение
-                                        {% if form.instance.pk and form.instance.image %}
+                                        {% if form.instance.pk and form.image_display.has_file %}
                                             <span class="text-success"><i class="fas fa-check-circle"></i> загружено</span>
+                                        {% elif form.instance.pk and form.image_display.has_reference %}
+                                            <span class="text-warning"><i class="fas fa-exclamation-circle"></i> файл не найден</span>
                                         {% elif form.instance.pk %}
                                             <span class="text-warning"><i class="fas fa-exclamation-circle"></i> не загружено</span>
                                         {% else %}
@@ -272,7 +274,7 @@
                                     {% endif %}
                                     
                                     <!-- Превью существующего изображения -->
-                                    {% if form.instance.image %}
+                                    {% if form.image_display.has_reference %}
                                         <div class="mt-2">
                                             {% if form.image_display.safe_url %}
                                                 <img src="{{ form.image_display.safe_url }}" class="img-thumbnail" style="max-width: 150px;">
@@ -285,7 +287,7 @@
                                                 <div class="p-2 bg-light border border-warning rounded">
                                                     <small class="text-warning">
                                                         <i class="fas fa-exclamation-triangle"></i>
-                                                        Файл не найден на диске: <code>{{ form.instance.image.name }}</code>
+                                                        Файл не найден на диске: <code>{{ form.image_display.file_name }}</code>
                                                     </small>
                                                 </div>
                                             {% endif %}
@@ -333,7 +335,7 @@
                                         <small class="text-muted">
                                             {% if form.image_display.has_file %}
                                                 <i class="fas fa-check text-success"></i> {{ form.image_display.position_status }}
-                                            {% elif form.instance.image.name %}
+                                            {% elif form.image_display.has_reference %}
                                                 <i class="fas fa-unlink text-danger"></i> Файл потерян
                                             {% else %}
                                                 <i class="fas fa-exclamation-triangle text-warning"></i> Файл отсутствует
@@ -361,10 +363,10 @@
                                 {% endif %}
                                 
                                 <!-- РАСШИРЕННАЯ подсказка -->
-                                {% if form.instance.pk and form.instance.image.name %}
+                                {% if form.instance.pk and form.image_display.has_reference %}
                                     <small class="form-text {% if form.image_display.has_file %}text-success{% else %}text-warning{% endif %}">
                                         <i class="fas fa-info-circle"></i> 
-                                        Файл: {{ form.instance.image.name|default:"неизвестно" }}
+                                        Файл: {{ form.image_display.file_name|default:"неизвестно" }}
                                         {% if not form.image_display.has_file %}
                                             <span class="text-danger">(не найден на диске)</span>
                                         {% endif %}

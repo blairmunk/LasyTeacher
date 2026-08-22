@@ -175,17 +175,7 @@ class DjangoTaskReadRepository(ITaskReadRepository):
             estimated_time=task.estimated_time,
             teacher_notes=task.teacher_notes,
             images=tuple(
-                TaskDetailImage(
-                    caption=image.caption,
-                    position=image.position,
-                    safe_url=TaskImagePresentationService.safe_url(
-                        image.image,
-                    ),
-                    image_name=image.image.name if image.image else '',
-                    css_class=TaskImagePresentationService.css_class(
-                        image.position,
-                    ),
-                )
+                self._task_detail_image(image)
                 for image in task.images.all()
             ),
             created_at=task.created_at,
@@ -205,6 +195,17 @@ class DjangoTaskReadRepository(ITaskReadRepository):
                 )
                 for requirement in task.codifier_requirements.all()
             ),
+        )
+
+    @staticmethod
+    def _task_detail_image(image):
+        display = TaskImagePresentationService.build(image)
+        return TaskDetailImage(
+            caption=image.caption,
+            position=image.position,
+            safe_url=display.safe_url,
+            image_name=display.file_name,
+            css_class=TaskImagePresentationService.css_class(image.position),
         )
 
     def get_task_detail_groups(self, task_id: str):

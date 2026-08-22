@@ -30,14 +30,14 @@ class DjangoTaskImageAuditRepositoryAdaptersTests(TestCase):
             task_type='computational',
         )
         missing_asset = ImageAsset.objects.create(
-            file='task_images/lens.png',
+            file=f'image_assets/aa/{"a" * 64}.png',
             checksum='a' * 64,
             byte_size=10,
             mime_type='image/png',
             original_filename='lens.png',
         )
         positioned_asset = ImageAsset.objects.create(
-            file='task_images/table.png',
+            file=f'image_assets/bb/{"b" * 64}.png',
             checksum='b' * 64,
             byte_size=20,
             mime_type='image/png',

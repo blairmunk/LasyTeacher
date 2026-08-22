@@ -142,7 +142,7 @@ class DjangoTaskExportRepository(ITaskExportRepository):
     def _task_export_images(self, task):
         result = []
         for image in task.images.all():
-            image_file = image.image
+            image_file = image.asset.file if image.asset_id else None
             if not TaskImagePresentationService.has_file(image_file):
                 continue
             try:

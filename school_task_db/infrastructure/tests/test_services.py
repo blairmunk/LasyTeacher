@@ -279,6 +279,33 @@ class TaskImportRunnerIntegrationTests(TestCase):
         self.assertEqual(log.status, ImportLog.Status.FAILED)
         self.assertEqual(log.error_messages, [result.error])
 
+    def test_execute_import_persists_warnings_without_partial_status(self):
+        request = TaskImportRequest(
+            data={
+                'format_version': '1.2',
+                'tasks': [],
+            },
+            filename='old-format.json',
+            file_size=64,
+        )
+
+        result = self._execute(request)
+        log = ImportLog.objects.get(pk=result.log_id)
+
+        self.assertTrue(result.success)
+        self.assertEqual(log.status, ImportLog.Status.SUCCESS)
+        self.assertEqual(log.errors_count, 0)
+        self.assertEqual(log.error_messages, [])
+        self.assertEqual(len(log.details['warning_messages']), 2)
+        self.assertTrue(any(
+            'формате 1.5' in warning
+            for warning in log.details['warning_messages']
+        ))
+        self.assertIn(
+            'Массив "tasks" пуст',
+            log.details['warning_messages'],
+        )
+
     def test_execute_import_preserves_partial_import_error_messages(self):
         request = TaskImportRequest(
             data={

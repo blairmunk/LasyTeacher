@@ -38,6 +38,7 @@ class DjangoTaskImportLogRepository(ITaskImportLogRepository):
             'operations_by_type': operation_counts,
             'context_counts': dict(summary.context_counts),
             'preview': dict(summary.preview),
+            'warning_messages': list(summary.warning_messages),
         }
         log.error_messages = list(summary.error_messages)
         log.duration_ms = duration_ms

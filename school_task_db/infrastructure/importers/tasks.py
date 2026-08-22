@@ -79,6 +79,10 @@ class DjangoTaskImportWriteSession(ITaskImportWriteSession):
             skipped_by_type=stats.skipped_by_type,
             errors=len(stats.errors),
             error_messages=tuple(issue.message for issue in stats.errors[:50]),
+            warnings=len(stats.warnings),
+            warning_messages=tuple(
+                issue.message for issue in stats.warnings[:50]
+            ),
             context_counts=self.registry.counts(),
         )
 

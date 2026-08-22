@@ -1,5 +1,6 @@
 """Validate, execute, and journal a task import operation."""
 
+from dataclasses import replace
 from time import monotonic
 
 from core_logic.entities.task_import import TaskImportRequest, TaskImportResult
@@ -58,6 +59,11 @@ class ExecuteTaskImportUseCase:
                 error=message,
             )
 
+        summary = self._with_validation_warnings(
+            summary,
+            validation.warnings,
+        )
+
         duration_ms = self._duration_ms(started_at)
         self.task_import_log_repo.complete(log_id, summary, duration_ms)
         return TaskImportResult(
@@ -75,3 +81,21 @@ class ExecuteTaskImportUseCase:
 
     def _duration_ms(self, started_at) -> int:
         return max(0, int((self.clock() - started_at) * 1000))
+
+    @staticmethod
+    def _with_validation_warnings(summary, validation_warnings):
+        new_messages = tuple(
+            warning
+            for warning in dict.fromkeys(validation_warnings)
+            if warning not in summary.warning_messages
+        )
+        if not new_messages:
+            return summary
+        return replace(
+            summary,
+            warnings=summary.warnings + len(new_messages),
+            warning_messages=(
+                *summary.warning_messages,
+                *new_messages,
+            ),
+        )

@@ -135,6 +135,8 @@ class TaskImportRunSummary:
     skipped_by_type: Mapping[str, int] = field(default_factory=dict)
     errors: int = 0
     error_messages: tuple[str, ...] = field(default_factory=tuple)
+    warnings: int = 0
+    warning_messages: tuple[str, ...] = field(default_factory=tuple)
     context_counts: Mapping[str, int] = field(default_factory=dict)
     preview: Mapping[str, Any] = field(default_factory=dict)
 
@@ -148,6 +150,11 @@ class TaskImportRunSummary:
         ):
             object.__setattr__(self, field_name, dict(getattr(self, field_name)))
         object.__setattr__(self, 'error_messages', tuple(self.error_messages))
+        object.__setattr__(
+            self,
+            'warning_messages',
+            tuple(self.warning_messages),
+        )
 
     @property
     def tasks_created(self) -> int:
@@ -179,10 +186,12 @@ class TaskImportRunSummary:
             'updated': self.tasks_updated,
             'skipped': self.tasks_skipped,
             'errors': self.errors,
+            'warnings': self.warnings,
             'by_type': self.operation_counts(),
             'context': context,
             'context_counts': dict(context),
             'preview': dict(self.preview),
+            'warning_messages': list(self.warning_messages),
         }
 
 

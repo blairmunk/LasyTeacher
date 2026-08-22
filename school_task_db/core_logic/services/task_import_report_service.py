@@ -37,6 +37,12 @@ class TaskImportReportService:
                 f'  • {error}'
                 for error in summary.error_messages[:5]
             )
+        if summary.warnings:
+            lines.append(f'\n⚠️ Предупреждений: {summary.warnings}')
+            lines.extend(
+                f'  • {warning}'
+                for warning in summary.warning_messages[:5]
+            )
         return '\n'.join(lines)
 
     @staticmethod

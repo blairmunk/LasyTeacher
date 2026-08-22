@@ -72,6 +72,7 @@ class TaskContentSnapshotTests(TestCase):
             images=(
                 TaskImageSnapshot(
                     image_id='image-1',
+                    asset_id='asset-1',
                     file_name='tasks/image.png',
                     position='bottom',
                     caption='Рисунок',
@@ -94,3 +95,4 @@ class TaskContentSnapshotTests(TestCase):
             '2.3',
         )
         self.assertEqual(payload['images'][0]['image_id'], 'image-1')
+        self.assertEqual(payload['images'][0]['asset_id'], 'asset-1')

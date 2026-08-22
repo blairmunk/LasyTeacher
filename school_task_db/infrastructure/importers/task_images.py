@@ -12,14 +12,24 @@ from core_logic.value_objects.task_import import (
     TaskImportConflictError,
     normalize_task_import_uuid,
 )
+from infrastructure.services.django_image_asset_store import (
+    DjangoImageAssetStore,
+)
 from tasks.models import Task, TaskImage
 
 
 class TaskImageImporter:
-    def __init__(self, runtime, registry, transfer_codec=None):
+    def __init__(
+        self,
+        runtime,
+        registry,
+        transfer_codec=None,
+        asset_store=None,
+    ):
         self.runtime = runtime
         self.registry = registry
         self.transfer_codec = transfer_codec or TaskImageTransferCodec()
+        self.asset_store = asset_store or DjangoImageAssetStore()
 
     def import_images(self, images_data):
         self.runtime.write('🖼️ Импорт изображений заданий...')
@@ -95,7 +105,7 @@ class TaskImageImporter:
             task_image = TaskImage.objects.create(
                 id=image_uuid,
                 task=task,
-                image=image_content,
+                asset=self.asset_store.get_or_create(image_content),
                 position=position,
                 caption=image_data.get('caption', ''),
                 order=image_data.get('order', 1),
@@ -127,11 +137,15 @@ class TaskImageImporter:
             if 'base64_data' in image_data:
                 image_content = self._decode_content(
                     image_data,
-                    default_filename=f'updated_{image.image.name}',
+                    default_filename=(
+                        f'updated_{image.asset.original_filename}'
+                        if image.asset_id
+                        else 'updated_image.jpg'
+                    ),
                 )
                 if image_content is None:
                     return False
-                image.image = image_content
+                image.asset = self.asset_store.get_or_create(image_content)
             image.save()
             self.runtime.log_success(
                 f'Обновлено изображение {image.get_short_uuid()}',

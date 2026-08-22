@@ -196,6 +196,14 @@ class TaskForm(forms.ModelForm):
 
 
 class TaskImageForm(forms.ModelForm):
+    image = forms.ImageField(
+        label='Изображение',
+        required=False,
+        widget=forms.FileInput(
+            attrs={'class': 'form-control', 'accept': 'image/*'},
+        ),
+    )
+
     @cached_property
     def image_display(self):
         return TaskImagePresentationService.build(self.instance)
@@ -204,7 +212,6 @@ class TaskImageForm(forms.ModelForm):
         model = TaskImage
         fields = ['image', 'position', 'caption', 'order']
         widgets = {
-            'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'position': forms.Select(attrs={'class': 'form-select'}),
             'caption': forms.TextInput(attrs={'class': 'form-control'}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),

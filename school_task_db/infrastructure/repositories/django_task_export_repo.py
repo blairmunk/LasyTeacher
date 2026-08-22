@@ -37,7 +37,7 @@ class DjangoTaskExportRepository(ITaskExportRepository):
             'subtopic',
             'source',
         ).prefetch_related(
-            'images',
+            'images__asset',
             'taskgroup_set__group',
             'codifier_content_entries__codifier',
             'codifier_requirements__codifier',
@@ -142,17 +142,22 @@ class DjangoTaskExportRepository(ITaskExportRepository):
     def _task_export_images(self, task):
         result = []
         for image in task.images.all():
-            if not TaskImagePresentationService.has_file(image.image):
+            image_file = image.image
+            if not TaskImagePresentationService.has_file(image_file):
                 continue
             try:
-                with image.image.open('rb') as image_file:
-                    encoded = self.transfer_codec.encode(image_file.read())
+                with image_file.open('rb') as opened_file:
+                    encoded = self.transfer_codec.encode(opened_file.read())
             except Exception:
                 continue
             result.append(TaskExportImageSource(
                 pk=str(image.pk),
                 task_id=str(task.pk),
-                filename=image.image.name.split('/')[-1],
+                filename=(
+                    image.asset.original_filename
+                    if image.asset_id
+                    else image_file.name.split('/')[-1]
+                ),
                 position=image.position or '',
                 caption=image.caption or '',
                 order=image.order,

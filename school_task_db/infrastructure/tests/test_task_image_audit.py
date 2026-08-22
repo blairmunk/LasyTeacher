@@ -12,7 +12,7 @@ from infrastructure.repositories.django_task_image_audit_command_repo import (
 from infrastructure.repositories.django_task_image_audit_query_repo import (
     DjangoTaskImageAuditQueryRepository,
 )
-from tasks.models import Task, TaskImage
+from tasks.models import ImageAsset, Task, TaskImage
 
 
 class DjangoTaskImageAuditRepositoryAdaptersTests(TestCase):
@@ -29,15 +29,29 @@ class DjangoTaskImageAuditRepositoryAdaptersTests(TestCase):
             difficulty=2,
             task_type='computational',
         )
+        missing_asset = ImageAsset.objects.create(
+            file='task_images/lens.png',
+            checksum='a' * 64,
+            byte_size=10,
+            mime_type='image/png',
+            original_filename='lens.png',
+        )
+        positioned_asset = ImageAsset.objects.create(
+            file='task_images/table.png',
+            checksum='b' * 64,
+            byte_size=20,
+            mime_type='image/png',
+            original_filename='table.png',
+        )
         self.missing_image = TaskImage.objects.create(
             task=task,
-            image='task_images/lens.png',
+            asset=missing_asset,
             caption='Схема установки',
             position='',
         )
         self.positioned_image = TaskImage.objects.create(
             task=task,
-            image='task_images/table.png',
+            asset=positioned_asset,
             caption='Таблица',
             position='right_40',
         )

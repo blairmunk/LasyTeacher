@@ -135,7 +135,7 @@ class DjangoTaskGroupCatalogRepository(ITaskGroupCatalogRepository):
             'task',
             'task__topic',
             'task__subtopic',
-        ).prefetch_related('task__images')
+        ).prefetch_related('task__images__asset')
 
         return tuple(
             TaskGroupDetailTask(

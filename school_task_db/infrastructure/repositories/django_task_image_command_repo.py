@@ -9,10 +9,16 @@ from core_logic.entities.task import (
 from core_logic.interfaces.task_image_command_repo import (
     ITaskImageCommandRepository,
 )
+from infrastructure.services.django_image_asset_store import (
+    DjangoImageAssetStore,
+)
 from tasks.models import Task, TaskImage
 
 
 class DjangoTaskImageCommandRepository(ITaskImageCommandRepository):
+    def __init__(self, asset_store=None):
+        self.asset_store = asset_store or DjangoImageAssetStore()
+
     def save_task_images(
         self,
         task_id: str,
@@ -37,7 +43,9 @@ class DjangoTaskImageCommandRepository(ITaskImageCommandRepository):
                     continue
 
                 if image_params.image:
-                    task_image.image = image_params.image
+                    task_image.asset = self.asset_store.get_or_create(
+                        image_params.image,
+                    )
                 task_image.position = image_params.position
                 task_image.caption = image_params.caption
                 task_image.order = image_params.order
@@ -48,7 +56,7 @@ class DjangoTaskImageCommandRepository(ITaskImageCommandRepository):
                 continue
             TaskImage.objects.create(
                 task_id=task_id,
-                image=image_params.image,
+                asset=self.asset_store.get_or_create(image_params.image),
                 position=image_params.position,
                 caption=image_params.caption,
                 order=image_params.order,

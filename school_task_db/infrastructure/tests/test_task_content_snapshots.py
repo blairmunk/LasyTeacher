@@ -5,7 +5,7 @@ from curriculum.models import Topic
 from infrastructure.services.task_content_snapshots import (
     build_task_content_snapshots,
 )
-from tasks.models import Task
+from tasks.models import ImageAsset, Task, TaskImage
 
 
 class TaskContentSnapshotClassificationTests(TestCase):
@@ -85,3 +85,24 @@ class TaskContentSnapshotClassificationTests(TestCase):
         self.assertEqual(snapshot.content_element_descriptions, ())
         self.assertEqual(snapshot.codifier_content_entries, ())
         self.assertEqual(snapshot.content_element, '')
+
+    def test_snapshot_references_immutable_image_asset_by_uuid(self):
+        asset = ImageAsset.objects.create(
+            file='image_assets/ab/asset.png',
+            checksum='a' * 64,
+            byte_size=10,
+            mime_type='image/png',
+            original_filename='diagram.png',
+        )
+        task_image = TaskImage.objects.create(
+            task=self.task,
+            asset=asset,
+            position='bottom_70',
+            caption='Схема',
+        )
+
+        snapshot = build_task_content_snapshots([self.task])[str(self.task.pk)]
+
+        self.assertEqual(snapshot.images[0].image_id, str(task_image.pk))
+        self.assertEqual(snapshot.images[0].asset_id, str(asset.pk))
+        self.assertEqual(snapshot.images[0].file_name, asset.file.name)

@@ -139,7 +139,7 @@ class DjangoTaskReadRepository(ITaskReadRepository):
             'subtopic',
             'source',
         ).prefetch_related(
-            'images',
+            'images__asset',
             'codifier_content_entries__codifier',
             'codifier_requirements__codifier',
         ).filter(pk=task_id).first()

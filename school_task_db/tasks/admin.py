@@ -2,7 +2,11 @@ from django.contrib import admin
 from .models import Source
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Task, TaskImage
+from .models import ImageAsset, Task, TaskImage
+from infrastructure.forms.task_django_forms import TaskImageForm
+from infrastructure.services.django_image_asset_store import (
+    DjangoImageAssetStore,
+)
 from codifier.models import ContentEntry, Requirement
 from curriculum.models import Topic, SubTopic
 from core_logic.value_objects.task_validation import (
@@ -143,8 +147,23 @@ class SourceAdmin(admin.ModelAdmin):
     def get_short_uuid(self, obj):
         return obj.get_short_uuid()
 
+class TaskImageAdminForm(TaskImageForm):
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        uploaded_file = self.cleaned_data.get('image')
+        if uploaded_file:
+            instance.asset = DjangoImageAssetStore().get_or_create(
+                uploaded_file,
+            )
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
+
 class TaskImageInline(admin.TabularInline):
     model = TaskImage
+    form = TaskImageAdminForm
     extra = 1
     fields = ['image', 'position', 'caption', 'order']
 
@@ -211,6 +230,43 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(TaskImage)
 class TaskImageAdmin(admin.ModelAdmin):
+    form = TaskImageAdminForm
     list_display = ['task', 'position', 'caption', 'order', 'created_at']
     list_filter = ['position', 'created_at']
     search_fields = ['task__text', 'caption']
+
+
+@admin.register(ImageAsset)
+class ImageAssetAdmin(admin.ModelAdmin):
+    list_display = [
+        'get_short_uuid',
+        'original_filename',
+        'mime_type',
+        'byte_size',
+        'checksum',
+        'created_at',
+    ]
+    search_fields = ['=id', 'checksum', 'original_filename']
+    readonly_fields = [
+        'id',
+        'file',
+        'checksum',
+        'byte_size',
+        'mime_type',
+        'original_filename',
+        'created_at',
+        'updated_at',
+    ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='UUID')
+    def get_short_uuid(self, obj):
+        return obj.get_short_uuid()

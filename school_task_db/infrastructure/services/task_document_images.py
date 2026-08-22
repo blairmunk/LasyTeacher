@@ -9,14 +9,25 @@ from core_logic.services.task_image_transfer_codec import (
     TaskImageTransferCodec,
 )
 from core_logic.value_objects.task_image_position import task_image_layout
+from infrastructure.services.django_image_asset_store import (
+    DjangoImageAssetFileResolver,
+)
 
 
 class TaskDocumentImagePayloadFormatter:
     """Add target-specific sources to storage-neutral image metadata."""
 
-    def __init__(self, storage=None, transfer_codec=None):
+    def __init__(
+        self,
+        storage=None,
+        transfer_codec=None,
+        asset_file_resolver=None,
+    ):
         self.storage = storage or default_storage
         self.transfer_codec = transfer_codec or TaskImageTransferCodec()
+        self.asset_file_resolver = (
+            asset_file_resolver or DjangoImageAssetFileResolver()
+        )
 
     def format_task_payload(self, payload, request=None):
         formatted = dict(payload)
@@ -39,7 +50,7 @@ class TaskDocumentImagePayloadFormatter:
 
     def _format_image(self, image, *, request=None):
         image = dict(image)
-        file_name = image.get('file_name', '')
+        file_name = self._file_name(image, request=request)
         if not file_name or not self._exists(file_name):
             return None
 
@@ -55,11 +66,27 @@ class TaskDocumentImagePayloadFormatter:
         layout = task_image_layout(image.get('position', ''))
         return {
             **image,
+            'file_name': file_name,
             'render_source': render_source,
             'placement': layout.placement,
             'width_percent': layout.width_percent,
             'width_fraction': f'{layout.width_percent / 100:g}',
         }
+
+    def _file_name(self, image, *, request=None):
+        asset_id = image.get('asset_id', '')
+        if asset_id:
+            build_context = getattr(request, 'build_context', None)
+            cache = None
+            if build_context is not None:
+                cache = build_context.setdefault('image_asset_file_names', {})
+                if asset_id in cache:
+                    return cache[asset_id]
+            file_name = self.asset_file_resolver.file_name(asset_id)
+            if cache is not None:
+                cache[asset_id] = file_name
+            return file_name
+        return image.get('file_name', '')
 
     def _cached_render_source(self, file_name, *, renderer_type, request):
         build_context = getattr(request, 'build_context', None)

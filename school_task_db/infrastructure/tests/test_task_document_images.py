@@ -97,12 +97,62 @@ class TaskDocumentImagePayloadFormatterTests(SimpleTestCase):
         self.assertEqual(image['width_percent'], 70)
         self.assertEqual(formatted['bottom_images'], (image,))
 
+    def test_asset_uuid_is_source_of_truth_over_snapshot_file_name(self):
+        with TemporaryDirectory() as media_root:
+            storage = FileSystemStorage(location=media_root)
+            storage.save('image_assets/current.png', ContentFile(b'CURRENT'))
+            resolver = FakeAssetFileResolver('image_assets/current.png')
+
+            formatted = TaskDocumentImagePayloadFormatter(
+                storage=storage,
+                asset_file_resolver=resolver,
+            ).format_task_payload(
+                self._payload(
+                    file_name='task_images/stale.png',
+                    asset_id='asset-1',
+                ),
+                request=self._request('html'),
+            )
+
+        self.assertEqual(resolver.asset_ids, ['asset-1'])
+        self.assertEqual(
+            formatted['images'][0]['file_name'],
+            'image_assets/current.png',
+        )
+        self.assertEqual(
+            formatted['images'][0]['render_source'],
+            'data:image/png;base64,Q1VSUkVOVA==',
+        )
+
+    def test_missing_asset_uuid_does_not_fall_back_to_stale_file_name(self):
+        with TemporaryDirectory() as media_root:
+            storage = FileSystemStorage(location=media_root)
+            storage.save('task_images/stale.png', ContentFile(b'STALE'))
+
+            formatted = TaskDocumentImagePayloadFormatter(
+                storage=storage,
+                asset_file_resolver=FakeAssetFileResolver(''),
+            ).format_task_payload(
+                self._payload(
+                    file_name='task_images/stale.png',
+                    asset_id='missing-asset',
+                ),
+                request=self._request('html'),
+            )
+
+        self.assertEqual(formatted['images'], ())
+
     @staticmethod
-    def _payload(position='bottom_70', file_name='task_images/diagram.png'):
+    def _payload(
+        position='bottom_70',
+        file_name='task_images/diagram.png',
+        asset_id='',
+    ):
         return {
             'text': 'Задание',
             'images': ({
                 'image_id': 'image-1',
+                'asset_id': asset_id,
                 'file_name': file_name,
                 'position': position,
                 'caption': 'Схема',
@@ -116,3 +166,13 @@ class TaskDocumentImagePayloadFormatterTests(SimpleTestCase):
             render_target=RenderTarget(renderer_type=renderer_type),
             build_context={},
         )
+
+
+class FakeAssetFileResolver:
+    def __init__(self, resolved_file_name):
+        self.resolved_file_name = resolved_file_name
+        self.asset_ids = []
+
+    def file_name(self, asset_id):
+        self.asset_ids.append(asset_id)
+        return self.resolved_file_name

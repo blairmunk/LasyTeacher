@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.db import models
 from django.urls import reverse
 from django.core.exceptions import ValidationError
@@ -11,8 +13,15 @@ from core_logic.value_objects.task_image_position import (
 
 
 def task_image_upload_path(instance, filename):
-    """Путь для загрузки изображений заданий"""
+    """Compatibility path retained for historical Django migrations."""
     return f'task_images/task_{instance.task.id}/{filename}'
+
+
+def image_asset_upload_path(instance, filename):
+    """Store immutable assets under a checksum-derived path."""
+    extension = Path(filename).suffix.lower()[:16]
+    checksum = instance.checksum or str(instance.pk)
+    return f'image_assets/{checksum[:2]}/{checksum}{extension}'
 
 
 class Source(BaseModel):
@@ -158,12 +167,63 @@ class Task(BaseModel):
         if errors:
             raise ValidationError(errors)
 
+class ImageAsset(BaseModel):
+    """Immutable binary image content shared by task-image references."""
+
+    file = models.FileField('Файл', upload_to=image_asset_upload_path)
+    checksum = models.CharField(
+        'SHA-256',
+        max_length=64,
+        unique=True,
+        editable=False,
+    )
+    byte_size = models.PositiveBigIntegerField('Размер, байт', editable=False)
+    mime_type = models.CharField(
+        'MIME-тип',
+        max_length=100,
+        blank=True,
+        editable=False,
+    )
+    original_filename = models.CharField(
+        'Исходное имя файла',
+        max_length=255,
+        blank=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = 'Неизменяемый файл изображения'
+        verbose_name_plural = 'Неизменяемые файлы изображений'
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError('ImageAsset является неизменяемым')
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError(
+            'ImageAsset может использоваться историческими снимками',
+        )
+
+    def __str__(self):
+        return f'{self.original_filename or "Изображение"} [{self.checksum[:12]}]'
+
+
 class TaskImage(BaseModel):
     """Изображение для задания"""
     POSITION_CHOICES = TASK_IMAGE_POSITION_CHOICES
     
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='images', verbose_name='Задание')
-    image = models.ImageField('Изображение', upload_to=task_image_upload_path)
+    asset = models.ForeignKey(
+        ImageAsset,
+        on_delete=models.PROTECT,
+        related_name='task_references',
+        null=True,
+        blank=True,
+        verbose_name='Файл изображения',
+        help_text='Пусто только у старых записей с потерянным файлом',
+    )
     position = models.CharField('Расположение', max_length=20, choices=POSITION_CHOICES, 
                                blank=True, help_text='Оставьте пустым для установки позже')
     caption = models.CharField('Подпись к изображению', max_length=200, blank=True)
@@ -177,3 +237,8 @@ class TaskImage(BaseModel):
     def __str__(self):
         position_display = self.get_position_display() if self.position else 'Позиция не задана'
         return f"Изображение для {self.task.topic.name} ({position_display})"
+
+    @property
+    def image(self):
+        """Compatibility read accessor for presentation and form templates."""
+        return self.asset.file if self.asset_id else None

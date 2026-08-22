@@ -69,7 +69,8 @@ def _build_task_content_snapshot(task):
         images=tuple(
             TaskImageSnapshot(
                 image_id=str(image.pk),
-                file_name=image.image.name,
+                asset_id=str(image.asset_id or ''),
+                file_name=image.image.name if image.image else '',
                 position=image.position,
                 caption=image.caption,
                 order=image.order,

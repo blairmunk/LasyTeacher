@@ -14,9 +14,12 @@ class DjangoTaskImageAuditQueryRepository(ITaskImageAuditQueryRepository):
                 pk=str(image.pk),
                 task_text=image.task.text,
                 topic_name=(image.task.topic.name if image.task.topic else ''),
-                filename=image.image.name,
+                filename=image.image.name if image.image else '',
                 caption=image.caption or '',
                 position=image.position or '',
             )
-            for image in TaskImage.objects.select_related('task__topic')
+            for image in TaskImage.objects.select_related(
+                'asset',
+                'task__topic',
+            )
         ]

@@ -19,7 +19,8 @@ class TaskCodifierSnapshot:
 @dataclass(frozen=True)
 class TaskImageSnapshot:
     image_id: str
-    file_name: str
+    asset_id: str = ''
+    file_name: str = ''
     position: str = ''
     caption: str = ''
     order: int = 1
@@ -174,6 +175,7 @@ def task_image_snapshots_payload(images) -> Tuple[Mapping[str, Any], ...]:
     return tuple(
         {
             'image_id': item.image_id,
+            'asset_id': item.asset_id,
             'file_name': item.file_name,
             'position': item.position,
             'caption': item.caption,

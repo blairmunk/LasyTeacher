@@ -107,6 +107,7 @@ def _task_image_payload(image):
             getattr(image, 'image_id', '')
             or getattr(image, 'pk', '')
         ),
+        'asset_id': str(getattr(image, 'asset_id', '') or ''),
         'file_name': (
             getattr(image, 'file_name', '')
             or getattr(image_file, 'name', '')

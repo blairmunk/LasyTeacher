@@ -251,7 +251,7 @@ from infrastructure.services.django_transaction_manager import (
 )
 from students.models import Student, StudentGroup
 from task_groups.models import AnalogGroup, TaskGroup
-from tasks.models import Source, Task, TaskImage
+from tasks.models import ImageAsset, Source, Task, TaskImage
 from works.models import (
     Variant,
     VariantContentBlockSnapshot,
@@ -1226,12 +1226,17 @@ class DjangoRemedialRepositoryTests(TestCase):
             ],
         )
         image = TaskImage.objects.get(task=task)
+        original_asset_id = image.asset_id
         update_result = repo.save_task_images(
             task_id=str(task.pk),
             images=[
                 TaskImageSaveParams(
                     image_id=str(image.pk),
-                    image=image.image,
+                    image=SimpleUploadedFile(
+                        'replacement.png',
+                        b'replacement-content',
+                        content_type='image/png',
+                    ),
                     position='right_40',
                     caption='Обновлённый рисунок',
                     order=2,
@@ -1251,11 +1256,14 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertEqual(create_result.status, 'saved')
         self.assertEqual(create_result.created_images, 1)
         self.assertEqual(update_result.status, 'saved')
+        self.assertNotEqual(image.asset_id, original_asset_id)
+        self.assertTrue(ImageAsset.objects.filter(pk=original_asset_id).exists())
         self.assertEqual(image.position, 'right_40')
         self.assertEqual(image.caption, 'Обновлённый рисунок')
         self.assertEqual(image.order, 2)
         self.assertEqual(delete_result.deleted_images, 1)
         self.assertFalse(TaskImage.objects.filter(pk=image.pk).exists())
+        self.assertEqual(ImageAsset.objects.count(), 2)
         self.assertEqual(missing_result.status, 'not_found')
 
     def test_task_export_repository_builds_payload(self):

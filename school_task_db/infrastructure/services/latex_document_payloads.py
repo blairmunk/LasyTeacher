@@ -32,6 +32,28 @@ class LatexTaskPayloadFormatter:
             formula_errors.extend(processed['errors'])
             formula_warnings.extend(processed['warnings'])
 
+        formatted_images = []
+        for image in formatted_payload.get('images', ()):
+            image_payload = dict(image)
+            processed_caption = self.formula_processor.render_for_latex_safe(
+                image_payload.get('caption') or '',
+            )
+            image_payload['caption'] = processed_caption['content']
+            formula_errors.extend(processed_caption['errors'])
+            formula_warnings.extend(processed_caption['warnings'])
+            formatted_images.append(image_payload)
+        formatted_payload['images'] = tuple(formatted_images)
+        formatted_payload['right_images'] = tuple(
+            image
+            for image in formatted_images
+            if image.get('placement') == 'right'
+        )
+        formatted_payload['bottom_images'] = tuple(
+            image
+            for image in formatted_images
+            if image.get('placement') == 'bottom'
+        )
+
         formatted_payload['latex_content'] = formatted_payload['text']
         formatted_payload['formula_errors'] = formula_errors
         formatted_payload['formula_warnings'] = formula_warnings
@@ -41,11 +63,22 @@ class LatexTaskPayloadFormatter:
 
 
 class RenderTargetTaskPayloadFormatter:
-    def __init__(self, formatters_by_renderer_type=None, default_formatter=None):
+    def __init__(
+        self,
+        formatters_by_renderer_type=None,
+        default_formatter=None,
+        base_formatter=None,
+    ):
         self.formatters_by_renderer_type = formatters_by_renderer_type or {}
         self.default_formatter = default_formatter
+        self.base_formatter = base_formatter
 
     def format_task_payload(self, payload, request=None):
+        if self.base_formatter is not None:
+            payload = self.base_formatter.format_task_payload(
+                payload,
+                request=request,
+            )
         formatter = self._formatter_for(request)
         if formatter is None:
             return dict(payload)

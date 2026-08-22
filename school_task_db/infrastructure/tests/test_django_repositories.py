@@ -1604,6 +1604,19 @@ class DjangoRemedialRepositoryTests(TestCase):
 
     def test_remedial_sheet_reads_original_tasks_from_attempt_snapshot(self):
         attempt = self.participation.attempt_snapshots.get(revision=1)
+        task_result = attempt.task_results.get(
+            task_id_snapshot=str(self.original_weak.pk),
+        )
+        captured_snapshot = dict(task_result.task_content_snapshot)
+        captured_snapshot['images'] = [{
+            'image_id': '00000000-0000-0000-0000-000000000001',
+            'file_name': 'task_images/frozen-diagram.png',
+            'position': 'bottom_70',
+            'caption': 'Схема на момент проверки',
+            'order': 1,
+        }]
+        task_result.task_content_snapshot = captured_snapshot
+        task_result.save(update_fields=['task_content_snapshot'])
         variant_task = VariantTask.objects.get(
             variant=self.source_variant,
             task=self.original_weak,
@@ -1638,6 +1651,10 @@ class DjangoRemedialRepositoryTests(TestCase):
         self.assertIsInstance(source.mark.points, float)
         self.assertIsInstance(source.mark.max_points, float)
         self.assertEqual(original.task.text, self.original_weak.text)
+        self.assertEqual(
+            original.task.images[0].file_name,
+            'task_images/frozen-diagram.png',
+        )
 
     def test_remedial_sheet_uses_frozen_specification_block_name(self):
         attempt = self.participation.attempt_snapshots.get(revision=1)

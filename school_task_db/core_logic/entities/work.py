@@ -433,6 +433,10 @@ class RemedialTaskRef:
     subtopic: str = ''
     source: str = ''
     source_detail: str = ''
+    images: tuple = field(default_factory=tuple)
+
+    def __post_init__(self):
+        object.__setattr__(self, 'images', tuple(self.images))
 
     @property
     def id(self) -> str:

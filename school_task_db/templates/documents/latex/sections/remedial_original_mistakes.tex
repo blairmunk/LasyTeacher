@@ -6,7 +6,10 @@
 {\small Баллы: {{ task.points }}/{{ task.max_points }}}
 
 {% endif %}
+{% include "documents/latex/partials/task_images.tex" with images=task.right_images %}
 {{ task.latex_content|default:task.text|safe }}
+
+{% include "documents/latex/partials/task_images.tex" with images=task.bottom_images %}
 
 \textbf{Ответ:} {{ task.answer|safe }}
 

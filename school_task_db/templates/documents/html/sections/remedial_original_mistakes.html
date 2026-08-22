@@ -15,7 +15,9 @@
                     ({{ task.points }}/{{ task.max_points }})
                 {% endif %}
             </p>
+            {% include "documents/html/partials/task_images.html" with images=task.right_images %}
             <div class="task-text">{{ task.text|linebreaksbr }}</div>
+            {% include "documents/html/partials/task_images.html" with images=task.bottom_images %}
             <div class="task-answer">
                 <strong>Ответ:</strong> {{ task.answer|linebreaksbr }}
             </div>

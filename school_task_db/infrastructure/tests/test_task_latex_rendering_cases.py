@@ -1,3 +1,4 @@
+import base64
 import shutil
 import subprocess
 from pathlib import Path
@@ -5,7 +6,9 @@ from tempfile import TemporaryDirectory
 from unittest import skipUnless
 
 from django.test import SimpleTestCase
+from django.template.loader import render_to_string
 
+from core_logic.value_objects.document_render_options import RenderTarget
 from infrastructure.services.latex_document_payloads import (
     LATEX_TEXT_FIELDS,
     LatexTaskPayloadFormatter,
@@ -125,6 +128,64 @@ class TaskLatexCompilationTests(SimpleTestCase):
 
         with TemporaryDirectory() as directory:
             source_path = Path(directory) / 'task-latex-corpus.tex'
+            source_path.write_text(document, encoding='utf-8')
+            process = subprocess.run(
+                [
+                    'xelatex',
+                    '-interaction=nonstopmode',
+                    '-halt-on-error',
+                    source_path.name,
+                ],
+                cwd=directory,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+        self.assertEqual(
+            process.returncode,
+            0,
+            process.stdout[-4000:] + process.stderr[-2000:],
+        )
+
+    @skipUnless(shutil.which('xelatex'), 'xelatex is not installed')
+    def test_document_image_macros_compile_with_spaced_file_path(self):
+        png_data = base64.b64decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwC'
+            'AAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+        )
+
+        with TemporaryDirectory() as directory:
+            image_path = Path(directory) / 'task diagram.png'
+            image_path.write_bytes(png_data)
+            include_source = r'{\detokenize{' + str(image_path) + '}}'
+            body = '\n'.join((
+                r'\schooltaskheading{1}{}',
+                (
+                    r'\schoolrighttaskimage{0.25}'
+                    f'{include_source}'
+                    r'{Схема \& формула \(F=ma\)}'
+                ),
+                'Текст задания рядом с изображением. ' * 8,
+                (
+                    r'\schoolbottomtaskimage{0.7}'
+                    f'{include_source}'
+                    r'{Рисунок снизу}'
+                ),
+            ))
+            document = render_to_string(
+                'documents/latex/base/document.tex',
+                {
+                    'render_target': RenderTarget(
+                        renderer_type='latex',
+                        page_format='A4',
+                    ),
+                    'body_content': body,
+                    'custom_latex_preamble': '',
+                },
+            )
+            source_path = Path(directory) / 'task-images.tex'
             source_path.write_text(document, encoding='utf-8')
             process = subprocess.run(
                 [

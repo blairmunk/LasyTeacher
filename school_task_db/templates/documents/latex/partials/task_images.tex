@@ -1,0 +1,7 @@
+{% for image in images %}
+{% if image.placement == 'right' %}
+\schoolrighttaskimage{ {{ image.width_fraction }} }{{ image.render_source|safe }}{ {{ image.caption|safe }} }
+{% else %}
+\schoolbottomtaskimage{ {{ image.width_fraction }} }{{ image.render_source|safe }}{ {{ image.caption|safe }} }
+{% endif %}
+{% endfor %}

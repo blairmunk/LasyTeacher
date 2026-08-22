@@ -17,6 +17,9 @@ from infrastructure.services.latex_document_payloads import (
     LatexTaskPayloadFormatter,
     RenderTargetTaskPayloadFormatter,
 )
+from infrastructure.services.task_document_images import (
+    TaskDocumentImagePayloadFormatter,
+)
 from infrastructure.services.sectioned_document_renderer_factory import (
     build_template_sectioned_html_to_pdf_document_renderer_registry,
     build_template_sectioned_text_document_renderer_registry,
@@ -178,6 +181,7 @@ def build_sectioned_document_payload_builder_registry(
 
 def _sectioned_task_payload_formatter():
     return RenderTargetTaskPayloadFormatter(
+        base_formatter=TaskDocumentImagePayloadFormatter(),
         formatters_by_renderer_type={
             'latex': LatexTaskPayloadFormatter(),
         },

@@ -1,0 +1,6 @@
+{% for image in images %}
+<figure class="task-document-image task-document-image-{{ image.placement }}" style="--task-image-width: {{ image.width_percent }}%;">
+    <img src="{{ image.render_source }}" alt="{{ image.caption|default:'Изображение к заданию' }}">
+    {% if image.caption %}<figcaption>{{ image.caption }}</figcaption>{% endif %}
+</figure>
+{% endfor %}

@@ -114,9 +114,18 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
                                                 'hint': 'F = ma',
                                                 'instruction': '',
                                                 'max_points': 2,
-                                                'full_solution': (
-                                                    'Подставим в формулу'
+                                            'full_solution': (
+                                                'Подставим в формулу'
+                                            ),
+                                            'right_images': [{
+                                                'render_source': (
+                                                    'data:image/png;base64,UE5H'
                                                 ),
+                                                'caption': 'Схема силы',
+                                                'placement': 'right',
+                                                'width_percent': 40,
+                                            }],
+                                            'bottom_images': [],
                                                 'render_mode': (
                                                     TASK_RENDER_MODE_WITH_FULL_SOLUTION
                                                 ),
@@ -210,6 +219,11 @@ class SectionedDocumentHtmlTemplateTests(SimpleTestCase):
             self.assertIn('Подсказка: F = ma', html)
             self.assertIn('Решение:', html)
             self.assertIn('Подставим в формулу', html)
+            self.assertIn('data:image/png;base64,UE5H', html)
+            self.assertIn('task-document-image-right', html)
+            self.assertIn('--task-image-width: 40%', html)
+            self.assertIn('Схема силы', html)
+            self.assertIn('object-fit: contain', html)
             self.assertIn('task-blank-cells', html)
             self.assertIn(
                 '<div class="document-page-break" aria-hidden="true"></div>',

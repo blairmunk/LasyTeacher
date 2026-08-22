@@ -118,6 +118,16 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
                                                 'full_solution': (
                                                     'Подставим в формулу'
                                                 ),
+                                                'right_images': [{
+                                                    'render_source': (
+                                                        r'{\detokenize{/tmp/'
+                                                        r'diagram.png}}'
+                                                    ),
+                                                    'caption': 'Схема силы',
+                                                    'placement': 'right',
+                                                    'width_fraction': '0.4',
+                                                }],
+                                                'bottom_images': [],
                                                 'render_mode': (
                                                     TASK_RENDER_MODE_WITH_FULL_SOLUTION
                                                 ),
@@ -278,6 +288,9 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn(r'\begin{schoolpagebreak}', latex)
             self.assertIn(r'\begin{schoolblankcells}', latex)
             self.assertIn(r'\usepackage{tikz}', latex)
+            self.assertIn(r'\usepackage{wrapfig}', latex)
+            self.assertIn(r'\newcommand{\schoolrighttaskimage}[3]', latex)
+            self.assertIn(r'\newcommand{\schoolbottomtaskimage}[3]', latex)
             self.assertIn(r'\newcommand{\schoolgrid}[3]', latex)
             self.assertNotIn(r'\resizebox{\linewidth}{!}', latex)
             self.assertIn(r'x=#3mm,y=#3mm', latex)
@@ -305,6 +318,13 @@ class SectionedDocumentLatexTemplateTests(SimpleTestCase):
             self.assertIn('Подсказка: F = ma', latex)
             self.assertIn(r'\textbf{Решение.}', latex)
             self.assertIn('Подставим в формулу', latex)
+            self.assertIn(
+                (
+                    r'\schoolrighttaskimage{ 0.4 }'
+                    r'{\detokenize{/tmp/diagram.png}}{ Схема силы }'
+                ),
+                latex,
+            )
             self.assertEqual(latex.count(r'\clearpage'), 2)
             self.assertIn(r'\schoolsectionheading{ Черновик }', latex)
             self.assertEqual(

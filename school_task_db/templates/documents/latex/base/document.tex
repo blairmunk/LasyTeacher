@@ -4,6 +4,7 @@
 \usepackage[russian]{babel}
 \usepackage{amsmath, amsfonts, amssymb}
 \usepackage{graphicx}
+\usepackage{wrapfig}
 \usepackage{enumitem}
 \usepackage{geometry}
 \usepackage[protrusion=true,expansion=false]{microtype}
@@ -55,6 +56,22 @@
     \hfill{\small\sffamily\itshape\color{schoolmuted}#2}%
   \fi
   \par\nobreak\smallskip}
+\newcommand{\schooltaskimagecaption}[1]{%
+  \if\relax\detokenize{#1}\relax\else
+    \par\smallskip{\footnotesize\sffamily\color{schoolmuted}#1}\par
+  \fi}
+\newcommand{\schoolrighttaskimage}[3]{%
+  \begin{wrapfigure}{r}{#1\linewidth}
+    \vspace{-\baselineskip}\centering
+    \includegraphics[width=\linewidth]{#2}%
+    \schooltaskimagecaption{#3}%
+  \end{wrapfigure}}
+\newcommand{\schoolbottomtaskimage}[3]{%
+  \par\smallskip\noindent
+  \begin{minipage}{\linewidth}\centering
+    \includegraphics[width=#1\linewidth]{#2}%
+    \schooltaskimagecaption{#3}%
+  \end{minipage}\par\smallskip}
 \newcommand{\schoolgrid}[3]{%
 \par\noindent
 \begin{tikzpicture}[x=#3mm,y=#3mm,baseline]

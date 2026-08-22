@@ -34,7 +34,9 @@
                             <span class="task-points">{{ block.task.max_points }} балл.</span>
                         {% endif %}
                     </div>
+                    {% include "documents/html/partials/task_images.html" with images=block.task.right_images %}
                     <div class="task-text">{{ block.task.text|linebreaksbr }}</div>
+                    {% include "documents/html/partials/task_images.html" with images=block.task.bottom_images %}
                     {% if block.task.render_mode == 'with_answer' and block.task.answer %}
                         <div class="task-answer">
                             <strong>Ответ:</strong> {{ block.task.answer|linebreaksbr }}

@@ -45,7 +45,9 @@
                                     <span class="task-points">{{ block.task.max_points }} балл.</span>
                                 {% endif %}
                             </div>
+                            {% include "documents/html/partials/task_images.html" with images=block.task.right_images %}
                             <div class="task-text">{{ block.task.text|linebreaksbr }}</div>
+                            {% include "documents/html/partials/task_images.html" with images=block.task.bottom_images %}
                             {% if payload.include_hints and block.task.hint %}
                                 <div class="task-hint">Подсказка: {{ block.task.hint }}</div>
                             {% endif %}

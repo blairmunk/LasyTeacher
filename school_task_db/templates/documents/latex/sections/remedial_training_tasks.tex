@@ -24,7 +24,10 @@
 
 {% elif block.block_type == 'task' and block.task %}
 \schooltaskheading{ {{ block.task.order }} }{% if block.task.max_points %}{ {{ block.task.max_points }} балл. }{% else %}{}{% endif %}
+{% include "documents/latex/partials/task_images.tex" with images=block.task.right_images %}
 {{ block.task.latex_content|default:block.task.text|safe }}
+
+{% include "documents/latex/partials/task_images.tex" with images=block.task.bottom_images %}
 
 {% if block.task.render_mode == 'with_answer' and block.task.answer %}
 \textbf{Ответ:} {{ block.task.answer|safe }}

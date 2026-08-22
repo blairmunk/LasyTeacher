@@ -35,7 +35,10 @@
 
 {% elif block.block_type == 'task' and block.task %}
 \schooltaskheading{ {{ block.task.order }} }{% if block.task.max_points %}{ {{ block.task.max_points }} балл. }{% else %}{}{% endif %}
+{% include "documents/latex/partials/task_images.tex" with images=block.task.right_images %}
 {{ block.task.latex_content|default:block.task.text|safe }}
+
+{% include "documents/latex/partials/task_images.tex" with images=block.task.bottom_images %}
 
 {% if payload.include_hints and block.task.hint %}
 \textit{Подсказка: {{ block.task.hint|safe }}}

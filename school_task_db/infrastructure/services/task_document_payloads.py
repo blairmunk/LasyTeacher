@@ -73,7 +73,7 @@ def build_original_task_payload(
 
 
 def build_task_payload(task):
-    return {
+    payload = {
         'id': str(task.pk),
         'text': task.text,
         'answer': task.answer,
@@ -87,6 +87,33 @@ def build_task_payload(task):
         'subtopic': _related_name(task.subtopic),
         'source': str(task.source) if task.source else '',
         'source_detail': task.source_detail,
+    }
+    images = getattr(task, 'images', ())
+    if hasattr(images, 'all'):
+        images = images.all()
+    payload['images'] = tuple(
+        _task_image_payload(image)
+        for image in images
+    )
+    return payload
+
+
+def _task_image_payload(image):
+    if isinstance(image, dict):
+        return dict(image)
+    image_file = getattr(image, 'image', None)
+    return {
+        'image_id': str(
+            getattr(image, 'image_id', '')
+            or getattr(image, 'pk', '')
+        ),
+        'file_name': (
+            getattr(image, 'file_name', '')
+            or getattr(image_file, 'name', '')
+        ),
+        'position': getattr(image, 'position', ''),
+        'caption': getattr(image, 'caption', ''),
+        'order': getattr(image, 'order', 1),
     }
 
 

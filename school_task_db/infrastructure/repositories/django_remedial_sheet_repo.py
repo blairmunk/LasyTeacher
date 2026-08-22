@@ -196,6 +196,7 @@ class DjangoRemedialSheetRepository(IRemedialSheetRepository):
             subtopic=task.subtopic_name,
             source=task.source_name,
             source_detail=task.source_detail,
+            images=task.images,
         )
 
     def get_work_personal_remedial_variant_ids(

@@ -166,14 +166,18 @@ def task_content_snapshot_payload(value) -> Mapping[str, Any]:
         'content_element_descriptions': (
             snapshot.content_element_descriptions
         ),
-        'images': tuple(
-            {
-                'image_id': item.image_id,
-                'file_name': item.file_name,
-                'position': item.position,
-                'caption': item.caption,
-                'order': item.order,
-            }
-            for item in snapshot.images
-        ),
+        'images': task_image_snapshots_payload(snapshot.images),
     }
+
+
+def task_image_snapshots_payload(images) -> Tuple[Mapping[str, Any], ...]:
+    return tuple(
+        {
+            'image_id': item.image_id,
+            'file_name': item.file_name,
+            'position': item.position,
+            'caption': item.caption,
+            'order': item.order,
+        }
+        for item in images
+    )

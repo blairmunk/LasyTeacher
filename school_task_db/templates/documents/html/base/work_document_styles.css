@@ -216,6 +216,42 @@ h4 {
     widows: 3;
 }
 
+.task-item::after,
+.remedial-training-task::after,
+.remedial-task::after {
+    display: table;
+    clear: both;
+    content: "";
+}
+
+.task-document-image {
+    width: min(100%, var(--task-image-width));
+    margin: 2.5mm auto;
+    break-inside: avoid;
+}
+
+.task-document-image-right {
+    float: right;
+    margin: 0 0 2.5mm 4mm;
+}
+
+.task-document-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 105mm;
+    object-fit: contain;
+}
+
+.task-document-image figcaption {
+    margin-top: 1mm;
+    color: var(--document-muted);
+    font-family: var(--document-sans);
+    font-size: 8.5pt;
+    line-height: 1.25;
+    text-align: center;
+}
+
 .task-hint,
 .task-instruction,
 .task-answer,

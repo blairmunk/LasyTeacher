@@ -96,6 +96,26 @@ class LatexTaskPayloadFormatterTests(SimpleTestCase):
         )
         self.assertFalse(formatted['has_formula_errors'])
 
+    def test_formats_image_caption_for_latex(self):
+        formatter = LatexTaskPayloadFormatter()
+
+        formatted = formatter.format_task_payload({
+            'text': 'Задание',
+            'images': ({
+                'caption': 'Схема & формула $F=ma$',
+                'placement': 'bottom',
+            },),
+        })
+
+        self.assertEqual(
+            formatted['images'][0]['caption'],
+            r'Схема \& формула \(F=ma\)',
+        )
+        self.assertEqual(
+            formatted['bottom_images'],
+            formatted['images'],
+        )
+
     def test_render_target_formatter_applies_formatter_for_matching_target(self):
         latex_formatter = FakeTaskPayloadFormatter(label='latex')
         formatter = RenderTargetTaskPayloadFormatter(
@@ -114,6 +134,23 @@ class LatexTaskPayloadFormatterTests(SimpleTestCase):
         self.assertEqual(html_payload, {'text': 'HTML'})
         self.assertEqual(latex_payload, {'text': 'LaTeX', 'formatted_as': 'latex'})
         self.assertEqual(latex_formatter.requests[0].render_target.renderer_type, 'latex')
+
+    def test_render_target_formatter_applies_base_before_target_formatter(self):
+        base_formatter = FakeTaskPayloadFormatter(label='base')
+        latex_formatter = FakeTaskPayloadFormatter(label='latex')
+        formatter = RenderTargetTaskPayloadFormatter(
+            base_formatter=base_formatter,
+            formatters_by_renderer_type={'latex': latex_formatter},
+        )
+
+        payload = formatter.format_task_payload(
+            {'text': 'LaTeX'},
+            request=FakePayloadBuildRequest(renderer_type='latex'),
+        )
+
+        self.assertEqual(base_formatter.requests[0].render_target.renderer_type, 'latex')
+        self.assertEqual(latex_formatter.requests[0].render_target.renderer_type, 'latex')
+        self.assertEqual(payload['formatted_as'], 'latex')
 
 
 class FakeFormulaProcessor:

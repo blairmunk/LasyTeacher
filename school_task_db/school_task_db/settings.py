@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.academic_year',
+                'core.context_processors.frontend_assets',
             ],
         },
     },
@@ -126,6 +127,13 @@ STATICFILES_DIRS = [            # ДОБАВЛЯЕМ
 
 # Для разработки также добавить:
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Browser UI dependencies: "local" for offline work, "cdn" for online hosting.
+# Standalone documents and PDF rendering always use local assets.
+FRONTEND_ASSET_MODE = os.environ.get(
+    'FRONTEND_ASSET_MODE',
+    'local',
+).strip().lower()
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -1,12 +1,11 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}База заданий{% endblock %}</title>
-    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'vendor/fontawesome/css/all.min.css' %}" rel="stylesheet">
+    <link href="{{ frontend_assets.bootstrap_css }}" rel="stylesheet">
+    <link href="{{ frontend_assets.fontawesome_css }}" rel="stylesheet">
     
     <!-- MathJax для рендеринга математических формул -->
     <script>
@@ -22,7 +21,7 @@
             }
         };
     </script>
-    <script src="{% static 'vendor/mathjax/es5/tex-chtml.js' %}"></script>
+    <script src="{{ frontend_assets.mathjax_js }}"></script>
 
     <style>
         /* CSS для расположения изображений в заданиях */
@@ -539,7 +538,7 @@
         {% endblock %}
     </div>
 
-    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{{ frontend_assets.bootstrap_js }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

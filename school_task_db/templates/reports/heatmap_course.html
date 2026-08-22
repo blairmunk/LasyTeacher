@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}{{ course.name }} — тепловая карта{% endblock %}
 
@@ -210,7 +209,7 @@
 
 {% block extra_js %}
 {% if has_data %}
-<script src="{% static 'vendor/plotly/plotly-2.27.0.min.js' %}"></script>
+<script src="{{ frontend_assets.plotly_js }}"></script>
 <script>
     const timelineConfig = {{ timeline_json|safe }};
     Plotly.newPlot('timeline-chart', timelineConfig.data, timelineConfig.layout, timelineConfig.config);
